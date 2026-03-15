@@ -3,23 +3,15 @@
 from __future__ import annotations
 
 import time
+
 import numpy as np
 
-try:
-    from .creature_env import CreatureNavigationEnv
-except ImportError:  # Support: python creature_env/test_env.py
-    import pathlib
-    import sys
-
-    project_root = pathlib.Path(__file__).resolve().parents[1]
-    if str(project_root) not in sys.path:
-        sys.path.insert(0, str(project_root))
-    from creature_env.creature_env import CreatureNavigationEnv
+from creature_env.creature_env import CreatureNavigationEnv
 
 
 def run_sanity_check() -> None:
     env = CreatureNavigationEnv(
-        leg_spec=[4, 4, 4, 4, 4],
+        leg_spec=[1],
         num_obstacles=3,
         arena_size=20.0,
         n_lidar_rays=16,

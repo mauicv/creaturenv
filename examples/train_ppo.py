@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import argparse
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import gymnasium as gym
@@ -14,12 +14,35 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecMonitor
 import creature_env  # noqa: F401  # Registers CreatureNavigation-v0
 
 
-def parse_leg_spec(value: str) -> list[int]:
-    parts = [chunk.strip() for chunk in value.split(",") if chunk.strip()]
-    leg_spec = [int(chunk) for chunk in parts]
-    if not leg_spec or any(link_count <= 0 for link_count in leg_spec):
-        raise argparse.ArgumentTypeError("leg_spec must be a comma-separated list of positive ints, e.g. 2,1,3")
-    return leg_spec
+@dataclass
+class TrainArgs:
+    # Fast laptop defaults (Colab-friendly).
+    total_timesteps: int = 30_000
+    n_envs: int = 2
+    seed: int = 0
+    device: str = "auto"
+    run_name: str = "train_fast_laptop"
+    output_dir: Path = field(default_factory=lambda: Path("runs"))
+    max_episode_steps: int = 300
+
+    leg_spec: list[int] = field(default_factory=lambda: [1])
+    num_obstacles: int = 0
+    arena_size: float = 20.0
+    n_lidar_rays: int = 4
+    lidar_range: float = 6.0
+    obstacle_seed: int | None = 7
+    damping: float = 0.1
+    fluid_friction: float = 0.8
+    max_thrust: float = 6.0
+    max_joint_torque: float = 20.0
+
+    learning_rate: float = 3e-4
+    n_steps: int = 256
+    batch_size: int = 64
+    gamma: float = 0.99
+    gae_lambda: float = 0.95
+    ent_coef: float = 0.0
+    clip_range: float = 0.2
 
 
 def make_env(
@@ -61,36 +84,7 @@ def make_env(
     return _init
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Train PPO on CreatureNavigationEnv.")
-    parser.add_argument("--total-timesteps", type=int, default=500_000)
-    parser.add_argument("--n-envs", type=int, default=8)
-    parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--device", type=str, default="auto")
-    parser.add_argument("--run-name", type=str, default="ppo_creature")
-    parser.add_argument("--output-dir", type=Path, default=Path("runs"))
-    parser.add_argument("--max-episode-steps", type=int, default=1000)
-
-    parser.add_argument("--leg-spec", type=parse_leg_spec, default=[2, 1, 3])
-    parser.add_argument("--num-obstacles", type=int, default=3)
-    parser.add_argument("--arena-size", type=float, default=20.0)
-    parser.add_argument("--n-lidar-rays", type=int, default=16)
-    parser.add_argument("--lidar-range", type=float, default=10.0)
-    parser.add_argument("--obstacle-seed", type=int, default=7)
-    parser.add_argument("--damping", type=float, default=0.1)
-    parser.add_argument("--fluid-friction", type=float, default=1.2)
-    parser.add_argument("--max-thrust", type=float, default=8.0)
-    parser.add_argument("--max-joint-torque", type=float, default=30.0)
-
-    parser.add_argument("--learning-rate", type=float, default=3e-4)
-    parser.add_argument("--n-steps", type=int, default=2048)
-    parser.add_argument("--batch-size", type=int, default=256)
-    parser.add_argument("--gamma", type=float, default=0.99)
-    parser.add_argument("--gae-lambda", type=float, default=0.95)
-    parser.add_argument("--ent-coef", type=float, default=0.0)
-    parser.add_argument("--clip-range", type=float, default=0.2)
-    args = parser.parse_args()
-
+def main(args: TrainArgs) -> None:
     run_dir = args.output_dir / args.run_name
     run_dir.mkdir(parents=True, exist_ok=True)
     checkpoints_dir = run_dir / "checkpoints"
@@ -174,5 +168,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    args = TrainArgs()
+    main(args)
 

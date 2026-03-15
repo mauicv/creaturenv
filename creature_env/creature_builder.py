@@ -67,7 +67,8 @@ def build_creature(
         leg_angle = start_angle + (2.0 * math.pi * leg_idx / n_legs)
         unit = (math.cos(leg_angle), math.sin(leg_angle))
         prev_body = central_body
-        prev_anchor = central_body.GetWorldPoint((body_radius * unit[0], body_radius * unit[1]))
+        # First link now anchors at the creature center (not the body perimeter).
+        prev_anchor = central_body.GetWorldPoint((0.0, 0.0))
         links_this_leg = []
 
         for link_idx in range(link_count):

@@ -21,7 +21,7 @@ Please review behavior, safety constraints, and physics assumptions before using
 - `creature_env/creature_builder.py` - Box2D world and creature construction
 - `creature_env/lidar.py` - lidar raycast callback/helpers
 - `creature_env/renderer.py` - pygame renderer (`human` and `rgb_array`)
-- `creature_env/test_env.py` - sanity test + visual run
+- `tests/test_env.py` - sanity test + visual run
 - `examples/train_ppo.py` - Stable-Baselines3 PPO training entrypoint
 - `examples/play_ppo.py` - run a trained PPO policy with rendering
 - `requirements/base.txt` - Python dependencies
@@ -52,13 +52,13 @@ Notes:
 From repo root:
 
 ```bash
-python -m creature_env.test_env
+python -m tests.test_env
 ```
 
 If `python` is not available in your shell:
 
 ```bash
-python3 -m creature_env.test_env
+python3 -m tests.test_env
 ```
 
 This opens a pygame window, runs random actions, renders each step, and prints `Sanity check passed.` when complete.

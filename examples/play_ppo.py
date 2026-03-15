@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import argparse
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import gymnasium as gym
@@ -12,34 +12,27 @@ from stable_baselines3 import PPO
 import creature_env  # noqa: F401  # Registers CreatureNavigation-v0
 
 
-def parse_leg_spec(value: str) -> list[int]:
-    parts = [chunk.strip() for chunk in value.split(",") if chunk.strip()]
-    leg_spec = [int(chunk) for chunk in parts]
-    if not leg_spec or any(link_count <= 0 for link_count in leg_spec):
-        raise argparse.ArgumentTypeError("leg_spec must be a comma-separated list of positive ints, e.g. 2,1,3")
-    return leg_spec
+@dataclass
+class PlayArgs:
+    # Fast laptop defaults aligned with TrainArgs in train_ppo.py.
+    model_path: Path = field(default_factory=lambda: Path("runs/train_fast_laptop/checkpoints/best_model.zip"))
+    episodes: int = 5
+    seed: int = 0
+    max_episode_steps: int = 300
+    deterministic: bool = True
 
+    leg_spec: list[int] = field(default_factory=lambda: [1])
+    num_obstacles: int = 0
+    arena_size: float = 20.0
+    n_lidar_rays: int = 4
+    lidar_range: float = 6.0
+    obstacle_seed: int | None = 7
+    damping: float = 0.1
+    fluid_friction: float = 0.8
+    max_thrust: float = 6.0
+    max_joint_torque: float = 20.0
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Play back a trained PPO model.")
-    parser.add_argument("--model-path", type=Path, required=True, help="Path to .zip model file")
-    parser.add_argument("--episodes", type=int, default=5)
-    parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--max-episode-steps", type=int, default=1000)
-    parser.add_argument("--deterministic", action="store_true")
-
-    parser.add_argument("--leg-spec", type=parse_leg_spec, default=[2, 1, 3])
-    parser.add_argument("--num-obstacles", type=int, default=3)
-    parser.add_argument("--arena-size", type=float, default=20.0)
-    parser.add_argument("--n-lidar-rays", type=int, default=16)
-    parser.add_argument("--lidar-range", type=float, default=10.0)
-    parser.add_argument("--obstacle-seed", type=int, default=7)
-    parser.add_argument("--damping", type=float, default=0.1)
-    parser.add_argument("--fluid-friction", type=float, default=1.2)
-    parser.add_argument("--max-thrust", type=float, default=8.0)
-    parser.add_argument("--max-joint-torque", type=float, default=30.0)
-    args = parser.parse_args()
-
+def main(args: PlayArgs) -> None:
     env = gym.make(
         "CreatureNavigation-v0",
         leg_spec=args.leg_spec,
@@ -73,5 +66,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    args = PlayArgs()
+    main(args)
 
