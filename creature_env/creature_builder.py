@@ -19,6 +19,8 @@ def build_creature(
     body_radius: float = 0.5,
     link_length: float = 0.8,
     link_width: float = 0.2,
+    body_density: float = 6.0,
+    link_density: float = 0.2,
 ) -> dict:
     """Build a new zero-gravity world with arena, creature, and static obstacles."""
     if not leg_spec:
@@ -52,7 +54,7 @@ def build_creature(
     )
     central_body.CreateCircleFixture(
         radius=body_radius,
-        density=2.0,
+        density=body_density,
         friction=0.5,
         restitution=0.0,
     )
@@ -90,7 +92,7 @@ def build_creature(
             )
             link.CreatePolygonFixture(
                 shape=b2PolygonShape(box=(link_length * 0.5, link_width * 0.5)),
-                density=1.0,
+                density=link_density,
                 friction=0.6,
                 restitution=0.0,
             )
