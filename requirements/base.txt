@@ -1,0 +1,7 @@
+# Core runtime dependencies for CreatureNavigationEnv
+# Note: `box2d-py` may require system `swig` during build.
+numpy>=1.23
+gymnasium>=0.29
+Box2D>=2.3.10
+pygame>=2.5
+
