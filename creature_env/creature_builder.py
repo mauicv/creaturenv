@@ -87,15 +87,19 @@ def build_creature(
         return link
 
     for leg_idx, link_count in enumerate(leg_spec):
-        leg_angle = start_angle + (2.0 * math.pi * leg_idx / n_legs)
-        unit = (math.cos(leg_angle), math.sin(leg_angle))
+        leg_offset = 2.0 * math.pi * leg_idx / n_legs
+        leg_angle = start_angle + leg_offset
+        # Anchor offsets passed to GetWorldPoint are in central-body local frame.
+        unit_local = (math.cos(leg_offset), math.sin(leg_offset))
+        # Link placement/orientation is in world frame.
+        unit_world = (math.cos(leg_angle), math.sin(leg_angle))
         links_this_leg = []
 
-        # Handle first link separately: it always connects directly to the central body.
-        first_anchor = central_body.GetWorldPoint((0.0, 0.0))
+        # Handle first link separately: it connects at the central body boundary.
+        first_anchor = central_body.GetWorldPoint((body_radius * unit_local[0], body_radius * unit_local[1]))
         first_center = (
-            first_anchor[0] + unit[0] * (link_length * 0.5),
-            first_anchor[1] + unit[1] * (link_length * 0.5),
+            first_anchor[0] + unit_world[0] * (link_length * 0.5),
+            first_anchor[1] + unit_world[1] * (link_length * 0.5),
         )
         first_link = _create_leg_link(leg_idx=leg_idx, link_idx=0, center=first_center, angle=leg_angle)
         first_joint = world.CreateRevoluteJoint(
@@ -120,8 +124,8 @@ def build_creature(
         # Subsequent links connect to the previous link tip.
         for link_idx in range(1, link_count):
             center = (
-                prev_anchor[0] + unit[0] * (link_length * 0.5),
-                prev_anchor[1] + unit[1] * (link_length * 0.5),
+                prev_anchor[0] + unit_world[0] * (link_length * 0.5),
+                prev_anchor[1] + unit_world[1] * (link_length * 0.5),
             )
             link = _create_leg_link(leg_idx=leg_idx, link_idx=link_idx, center=center, angle=leg_angle)
             joint = world.CreateRevoluteJoint(

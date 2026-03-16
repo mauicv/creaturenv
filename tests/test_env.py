@@ -8,21 +8,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from creature_env.creature_env import CreatureNavigationEnv
+from random import randint
 
 
 def run_sanity_check() -> None:
     env = CreatureNavigationEnv(
         leg_spec=[1],
-        num_obstacles=3,
+        num_obstacles=13,
         arena_size=20.0,
         n_lidar_rays=16,
         lidar_range=10.0,
         obstacle_seed=8,
         render_mode="human",
         max_thrust=5.0,
-        fluid_friction=1.2,
+        fluid_friction=0.1,
     )
-    obs, info = env.reset(seed=123)
+    obs, info = env.reset(seed=randint(0, 1000000))
     env.render()
     assert obs.shape == env.observation_space.shape
     assert env.observation_space.contains(obs)
