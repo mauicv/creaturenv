@@ -254,11 +254,9 @@ class CreatureNavigationEnv(gym.Env):
         return obs
 
     def _compute_reward(self, action: np.ndarray, distance: float) -> float:
-        distance_term = -distance * 0.01
-        shaping_bonus = self.prev_distance - distance
-        control_cost = 0.001 * float(np.sum(np.square(action)))
-        collision_term = -self.collision_penalty if self._contact_listener.had_obstacle_contact else 0.0
-        return distance_term + shaping_bonus - control_cost + collision_term
+        del action
+        # "Just move closer" shaping: positive when reducing distance to target.
+        return 10.0 * (self.prev_distance - distance)
 
     def _is_out_of_bounds(self) -> bool:
         half = self.arena_size * 0.5

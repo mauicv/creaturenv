@@ -65,37 +65,65 @@ def build_creature(
     leg_tips = []
     creature_bodies = [central_body]
 
+    def _create_leg_link(leg_idx: int, link_idx: int, center: tuple[float, float], angle: float):
+        link = world.CreateDynamicBody(
+            position=center,
+            angle=angle,
+            linearDamping=damping,
+            angularDamping=damping,
+            userData={
+                "entity": "creature",
+                "part": "link",
+                "leg_index": leg_idx,
+                "link_index": link_idx,
+            },
+        )
+        link.CreatePolygonFixture(
+            shape=b2PolygonShape(box=(link_length * 0.5, link_width * 0.5)),
+            density=link_density,
+            friction=0.6,
+            restitution=0.0,
+        )
+        return link
+
     for leg_idx, link_count in enumerate(leg_spec):
         leg_angle = start_angle + (2.0 * math.pi * leg_idx / n_legs)
         unit = (math.cos(leg_angle), math.sin(leg_angle))
-        prev_body = central_body
-        # First link now anchors at the creature center (not the body perimeter).
-        prev_anchor = central_body.GetWorldPoint((0.0, 0.0))
         links_this_leg = []
 
-        for link_idx in range(link_count):
+        # Handle first link separately: it always connects directly to the central body.
+        first_anchor = central_body.GetWorldPoint((0.0, 0.0))
+        first_center = (
+            first_anchor[0] + unit[0] * (link_length * 0.5),
+            first_anchor[1] + unit[1] * (link_length * 0.5),
+        )
+        first_link = _create_leg_link(leg_idx=leg_idx, link_idx=0, center=first_center, angle=leg_angle)
+        first_joint = world.CreateRevoluteJoint(
+            bodyA=central_body,
+            bodyB=first_link,
+            anchor=first_anchor,
+            enableMotor=True,
+            motorSpeed=0.0,
+            maxMotorTorque=max_joint_torque,
+            enableLimit=True,
+            lowerAngle=-math.pi + 0.05,
+            upperAngle=math.pi - 0.05,
+            collideConnected=False,
+        )
+        joints.append(first_joint)
+        links_this_leg.append(first_link)
+        creature_bodies.append(first_link)
+
+        prev_body = first_link
+        prev_anchor = first_link.GetWorldPoint((link_length * 0.5, 0.0))
+
+        # Subsequent links connect to the previous link tip.
+        for link_idx in range(1, link_count):
             center = (
                 prev_anchor[0] + unit[0] * (link_length * 0.5),
                 prev_anchor[1] + unit[1] * (link_length * 0.5),
             )
-            link = world.CreateDynamicBody(
-                position=center,
-                angle=leg_angle,
-                linearDamping=damping,
-                angularDamping=damping,
-                userData={
-                    "entity": "creature",
-                    "part": "link",
-                    "leg_index": leg_idx,
-                    "link_index": link_idx,
-                },
-            )
-            link.CreatePolygonFixture(
-                shape=b2PolygonShape(box=(link_length * 0.5, link_width * 0.5)),
-                density=link_density,
-                friction=0.6,
-                restitution=0.0,
-            )
+            link = _create_leg_link(leg_idx=leg_idx, link_idx=link_idx, center=center, angle=leg_angle)
             joint = world.CreateRevoluteJoint(
                 bodyA=prev_body,
                 bodyB=link,
@@ -103,9 +131,9 @@ def build_creature(
                 enableMotor=True,
                 motorSpeed=0.0,
                 maxMotorTorque=max_joint_torque,
-                enableLimit=False,
-                lowerAngle=-math.pi * 0.75,
-                upperAngle=math.pi * 0.75,
+                enableLimit=True,
+                lowerAngle=-math.pi + 0.05,
+                upperAngle=math.pi - 0.05,
                 collideConnected=False,
             )
             joints.append(joint)

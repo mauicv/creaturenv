@@ -5,6 +5,7 @@ from __future__ import annotations
 import time
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from creature_env.creature_env import CreatureNavigationEnv
 
@@ -27,9 +28,12 @@ def run_sanity_check() -> None:
     assert env.observation_space.contains(obs)
     assert "distance_to_target" in info
 
+    rewards = []
+
     for _ in range(300):
         action = env.action_space.sample().astype(np.float32)
         obs, reward, terminated, truncated, _ = env.step(action)
+        rewards.append(reward)
         env.render()
         assert obs.shape == env.observation_space.shape
         assert np.isfinite(reward)
@@ -45,6 +49,9 @@ def run_sanity_check() -> None:
         time.sleep(1.0 / 60.0)
 
     env.close()
+
+    plt.plot(rewards)
+    plt.show()
 
 
 if __name__ == "__main__":
