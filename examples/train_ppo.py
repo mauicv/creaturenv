@@ -1,4 +1,4 @@
-"""Train a PPO policy on SwimmerNavigationEnv."""
+"""Train a PPO policy on ChainReacherEnv."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import EvalCallback
 from stable_baselines3.common.vec_env import DummyVecEnv, VecMonitor
 
-import envs.swimer  # noqa: F401  # Registers SwimmerNavigation-v0
+import envs.chain_reacher  # noqa: F401  # Registers ChainReacher-v0
 
 
 @dataclass
@@ -25,16 +25,16 @@ class TrainArgs:
     output_dir: Path = field(default_factory=lambda: Path("runs"))
     max_episode_steps: int = 300
 
-    leg_spec: list[int] = field(default_factory=lambda: [1])
-    num_obstacles: int = 0
-    arena_size: float = 20.0
+    n_links: int = 2
+    n_obs: int = 0
+    link_length: float = 1.0
+    arena_radius: float | None = None
+    obstacle_size_range: tuple[float, float] = (0.3, 0.8)
     n_lidar_rays: int = 4
-    lidar_range: float = 6.0
+    lidar_range: float | None = None
     obstacle_seed: int | None = 7
-    damping: float = 0.1
-    fluid_friction: float = 0.8
-    max_thrust: float = 6.0
-    max_joint_torque: float = 20.0
+    max_torque: float = 8.0
+    target_threshold: float = 0.3
 
     learning_rate: float = 3e-4
     n_steps: int = 256
@@ -47,33 +47,34 @@ class TrainArgs:
 
 def make_env(
     *,
-    leg_spec: list[int],
+    n_links: int,
     seed: int,
     max_episode_steps: int,
-    num_obstacles: int,
-    arena_size: float,
+    n_obs: int,
+    link_length: float,
+    arena_radius: float | None,
+    obstacle_size_range: tuple[float, float],
     n_lidar_rays: int,
-    lidar_range: float,
+    lidar_range: float | None,
     obstacle_seed: int | None,
-    damping: float,
-    fluid_friction: float,
-    max_thrust: float,
-    max_joint_torque: float,
+    max_torque: float,
+    target_threshold: float,
     render_mode: str | None,
 ):
     def _init():
         env = gym.make(
-            "SwimmerNavigation-v0",
-            leg_spec=leg_spec,
-            num_obstacles=num_obstacles,
-            arena_size=arena_size,
+            "ChainReacher-v0",
+            n_links=n_links,
+            n_obs=n_obs,
+            link_length=link_length,
+            arena_radius=arena_radius,
+            obstacle_size_range=obstacle_size_range,
             n_lidar_rays=n_lidar_rays,
             lidar_range=lidar_range,
             obstacle_seed=obstacle_seed,
-            damping=damping,
-            fluid_friction=fluid_friction,
-            max_thrust=max_thrust,
-            max_joint_torque=max_joint_torque,
+            max_torque=max_torque,
+            target_threshold=target_threshold,
+            max_episode_steps=max_episode_steps,
             render_mode=render_mode,
         )
         env = TimeLimit(env, max_episode_steps=max_episode_steps)
@@ -93,18 +94,18 @@ def main(args: TrainArgs) -> None:
     train_env = DummyVecEnv(
         [
             make_env(
-                leg_spec=args.leg_spec,
+                n_links=args.n_links,
                 seed=args.seed + idx,
                 max_episode_steps=args.max_episode_steps,
-                num_obstacles=args.num_obstacles,
-                arena_size=args.arena_size,
+                n_obs=args.n_obs,
+                link_length=args.link_length,
+                arena_radius=args.arena_radius,
+                obstacle_size_range=args.obstacle_size_range,
                 n_lidar_rays=args.n_lidar_rays,
                 lidar_range=args.lidar_range,
                 obstacle_seed=args.obstacle_seed,
-                damping=args.damping,
-                fluid_friction=args.fluid_friction,
-                max_thrust=args.max_thrust,
-                max_joint_torque=args.max_joint_torque,
+                max_torque=args.max_torque,
+                target_threshold=args.target_threshold,
                 render_mode=None,
             )
             for idx in range(args.n_envs)
@@ -115,18 +116,18 @@ def main(args: TrainArgs) -> None:
     eval_env = DummyVecEnv(
         [
             make_env(
-                leg_spec=args.leg_spec,
+                n_links=args.n_links,
                 seed=args.seed + 10_000,
                 max_episode_steps=args.max_episode_steps,
-                num_obstacles=args.num_obstacles,
-                arena_size=args.arena_size,
+                n_obs=args.n_obs,
+                link_length=args.link_length,
+                arena_radius=args.arena_radius,
+                obstacle_size_range=args.obstacle_size_range,
                 n_lidar_rays=args.n_lidar_rays,
                 lidar_range=args.lidar_range,
                 obstacle_seed=args.obstacle_seed,
-                damping=args.damping,
-                fluid_friction=args.fluid_friction,
-                max_thrust=args.max_thrust,
-                max_joint_torque=args.max_joint_torque,
+                max_torque=args.max_torque,
+                target_threshold=args.target_threshold,
                 render_mode=None,
             )
         ]
