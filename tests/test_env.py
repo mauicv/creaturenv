@@ -1,4 +1,4 @@
-"""Basic sanity checks for CreatureNavigationEnv."""
+"""Basic sanity checks for SwimmerNavigationEnv."""
 
 from __future__ import annotations
 
@@ -7,12 +7,12 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 
-from creature_env.creature_env import CreatureNavigationEnv
+from envs.swimer.swimmer_env import SwimmerNavigationEnv
 from random import randint
 
 
 def run_sanity_check() -> None:
-    env = CreatureNavigationEnv(
+    env = SwimmerNavigationEnv(
         leg_spec=[1],
         num_obstacles=13,
         arena_size=20.0,

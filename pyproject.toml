@@ -19,5 +19,5 @@ dependencies = [
 include-package-data = false
 
 [tool.setuptools.packages.find]
-include = ["creature_env*"]
+include = ["envs*"]
 

@@ -1,4 +1,4 @@
-"""Gymnasium Box2D environment for a parameterized multi-legged thruster creature."""
+"""Gymnasium Box2D environment for a parameterized multi-legged thruster swimmer."""
 
 from __future__ import annotations
 
@@ -10,13 +10,13 @@ import numpy as np
 from Box2D import b2ContactListener
 from gymnasium import spaces
 
-from .creature_builder import build_creature
 from .lidar import cast_lidar
 from .renderer import PygameRenderer
+from .swimmer_builder import build_swimmer
 
 
 class ObstacleContactListener(b2ContactListener):
-    """Tracks whether creature-obstacle contact happened in the current step."""
+    """Tracks whether swimmer-obstacle contact happened in the current step."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -31,11 +31,11 @@ class ObstacleContactListener(b2ContactListener):
         data_a = body_a.userData or {}
         data_b = body_b.userData or {}
         entities = {data_a.get("entity"), data_b.get("entity")}
-        if "creature" in entities and "obstacle" in entities:
+        if "swimmer" in entities and "obstacle" in entities:
             self.had_obstacle_contact = True
 
 
-class CreatureNavigationEnv(gym.Env):
+class SwimmerNavigationEnv(gym.Env):
     """2D Box2D navigation task with articulated legs and per-tip thrusters."""
 
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 60}
@@ -112,7 +112,7 @@ class CreatureNavigationEnv(gym.Env):
         self.central_body = None
         self.joints = []
         self.leg_tips = []
-        self.creature_bodies = []
+        self.swimmer_bodies = []
         self.obstacle_bodies = []
         self.target_position = np.zeros((2,), dtype=np.float32)
         self.prev_distance = 0.0
@@ -189,7 +189,7 @@ class CreatureNavigationEnv(gym.Env):
             obstacle_rng = np.random.default_rng(self.obstacle_seed)
         self._obstacle_specs = self._sample_obstacles(start_position, obstacle_rng)
 
-        built = build_creature(
+        built = build_swimmer(
             leg_spec=self.leg_spec,
             start_position=start_position,
             start_angle=start_angle,
@@ -203,7 +203,7 @@ class CreatureNavigationEnv(gym.Env):
         self.central_body = built["central_body"]
         self.joints = built["joints"]
         self.leg_tips = built["leg_tips"]
-        self.creature_bodies = built["creature_bodies"]
+        self.swimmer_bodies = built["swimmer_bodies"]
         self.obstacle_bodies = built["obstacles"]
 
     def _body_frame_vector(self, world_vec: np.ndarray) -> np.ndarray:
@@ -277,7 +277,7 @@ class CreatureNavigationEnv(gym.Env):
 
         # Angular drag is lower than linear drag so links still articulate.
         angular_drag_coeff = 0.25 * self.fluid_friction
-        for body in self.creature_bodies:
+        for body in self.swimmer_bodies:
             vx, vy = body.linearVelocity
             linear_drag = (-self.fluid_friction * vx, -self.fluid_friction * vy)
             body.ApplyForceToCenter(linear_drag, wake=True)

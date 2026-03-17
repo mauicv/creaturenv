@@ -11,7 +11,7 @@ from Box2D import b2RayCastCallback
 class LidarCallback(b2RayCastCallback):
     """Raycast callback that stores only the closest valid hit."""
 
-    def __init__(self, ignored_entity: str = "creature") -> None:
+    def __init__(self, ignored_entity: str = "swimmer") -> None:
         super().__init__()
         self.ignored_entity = ignored_entity
         self.hit_fraction = 1.0
@@ -44,7 +44,7 @@ def cast_lidar(
     for idx in range(n_rays):
         ray_angle = body_angle + (2.0 * math.pi * idx / n_rays)
         end = (ox + max_range * math.cos(ray_angle), oy + max_range * math.sin(ray_angle))
-        callback = LidarCallback(ignored_entity="creature")
+        callback = LidarCallback(ignored_entity="swimmer")
         world.RayCast(callback, (ox, oy), end)
         fractions[idx] = float(callback.hit_fraction)
 

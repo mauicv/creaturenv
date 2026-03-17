@@ -9,7 +9,7 @@ import gymnasium as gym
 from gymnasium.wrappers import TimeLimit
 from stable_baselines3 import PPO
 
-import creature_env  # noqa: F401  # Registers CreatureNavigation-v0
+import envs.swimer  # noqa: F401  # Registers SwimmerNavigation-v0
 
 
 @dataclass
@@ -34,7 +34,7 @@ class PlayArgs:
 
 def main(args: PlayArgs) -> None:
     env = gym.make(
-        "CreatureNavigation-v0",
+        "SwimmerNavigation-v0",
         leg_spec=args.leg_spec,
         num_obstacles=args.num_obstacles,
         arena_size=args.arena_size,

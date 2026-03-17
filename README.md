@@ -1,6 +1,6 @@
 ## Parameterized Multi-Legged Thruster Creature (Gymnasium + Box2D)
 
-2D zero-gravity creature navigation environment with:
+2D zero-gravity swimmer navigation environment with:
 - configurable leg topology (for example `[2, 1, 3]`)
 - per-leg tip thrusters
 - joint motor control
@@ -16,11 +16,11 @@ Please review behavior, safety constraints, and physics assumptions before using
 
 ## Project Structure
 
-- `creature_env/__init__.py` - env registration (`CreatureNavigation-v0`)
-- `creature_env/creature_env.py` - main Gymnasium env
-- `creature_env/creature_builder.py` - Box2D world and creature construction
-- `creature_env/lidar.py` - lidar raycast callback/helpers
-- `creature_env/renderer.py` - pygame renderer (`human` and `rgb_array`)
+- `envs/swimer/__init__.py` - env registration (`SwimmerNavigation-v0`)
+- `envs/swimer/swimmer_env.py` - main Gymnasium env
+- `envs/swimer/swimmer_builder.py` - Box2D world and swimmer construction
+- `envs/swimer/lidar.py` - lidar raycast callback/helpers
+- `envs/swimer/renderer.py` - pygame renderer (`human` and `rgb_array`)
 - `tests/test_env.py` - sanity test + visual run
 - `examples/train_ppo.py` - Stable-Baselines3 PPO training entrypoint
 - `examples/play_ppo.py` - run a trained PPO policy with rendering
@@ -74,22 +74,22 @@ pip install -r requirements/rl.txt
 Train:
 
 ```bash
-python -m examples.train_ppo --total-timesteps 500000 --run-name ppo_creature
+python -m examples.train_ppo --total-timesteps 500000 --run-name ppo_swimmer
 ```
 
 Play a trained policy:
 
 ```bash
-python -m examples.play_ppo --model-path runs/ppo_creature/checkpoints/best_model.zip --deterministic
+python -m examples.play_ppo --model-path runs/ppo_swimmer/checkpoints/best_model.zip --deterministic
 ```
 
 ## Quick Usage Example
 
 ```python
 import gymnasium as gym
-import creature_env  # registers CreatureNavigation-v0
+import envs.swimer  # registers SwimmerNavigation-v0
 
-env = gym.make("CreatureNavigation-v0", leg_spec=[2, 1, 3], render_mode="human")
+env = gym.make("SwimmerNavigation-v0", leg_spec=[2, 1, 3], render_mode="human")
 obs, info = env.reset(seed=0)
 
 for _ in range(200):

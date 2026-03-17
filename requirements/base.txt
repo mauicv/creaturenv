@@ -1,4 +1,4 @@
-# Core runtime dependencies for CreatureNavigationEnv
+# Core runtime dependencies for SwimmerNavigationEnv
 # Note: `box2d-py` may require system `swig` during build.
 numpy>=1.23
 gymnasium>=0.29

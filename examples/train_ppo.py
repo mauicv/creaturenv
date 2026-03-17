@@ -1,4 +1,4 @@
-"""Train a PPO policy on CreatureNavigationEnv."""
+"""Train a PPO policy on SwimmerNavigationEnv."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import EvalCallback
 from stable_baselines3.common.vec_env import DummyVecEnv, VecMonitor
 
-import creature_env  # noqa: F401  # Registers CreatureNavigation-v0
+import envs.swimer  # noqa: F401  # Registers SwimmerNavigation-v0
 
 
 @dataclass
@@ -63,7 +63,7 @@ def make_env(
 ):
     def _init():
         env = gym.make(
-            "CreatureNavigation-v0",
+            "SwimmerNavigation-v0",
             leg_spec=leg_spec,
             num_obstacles=num_obstacles,
             arena_size=arena_size,

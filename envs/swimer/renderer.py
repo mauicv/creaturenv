@@ -1,4 +1,4 @@
-"""Pygame renderer for the creature environment."""
+"""Pygame renderer for the swimmer environment."""
 
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ class PygameRenderer:
         self._screen = None
         if self.render_mode == "human":
             self._screen = pygame.display.set_mode((self.width, self.height))
-            pygame.display.set_caption("CreatureNavigationEnv")
+            pygame.display.set_caption("SwimmerNavigationEnv")
 
     def _world_to_screen(self, point: tuple[float, float]) -> tuple[int, int]:
         x, y = point
@@ -96,7 +96,7 @@ class PygameRenderer:
 
         for body in world.bodies:
             user_data = body.userData or {}
-            if user_data.get("entity") != "creature":
+            if user_data.get("entity") != "swimmer":
                 continue
             part = user_data.get("part")
             if part == "central":

@@ -1,14 +1,14 @@
-"""Reward-direction checks for CreatureNavigationEnv."""
+"""Reward-direction checks for SwimmerNavigationEnv."""
 
 from __future__ import annotations
 
 import numpy as np
 
-from creature_env.creature_env import CreatureNavigationEnv
+from envs.swimer.swimmer_env import SwimmerNavigationEnv
 
 
-def _set_deterministic_single_leg_pose(env: CreatureNavigationEnv) -> None:
-    """Place the creature in a controlled pose so reward-direction tests are stable."""
+def _set_deterministic_single_leg_pose(env: SwimmerNavigationEnv) -> None:
+    """Place the swimmer in a controlled pose so reward-direction tests are stable."""
     # Keep the central body fixed at origin with no residual motion.
     env.central_body.position = (0.0, 0.0)
     env.central_body.angle = 0.0
@@ -24,7 +24,7 @@ def _set_deterministic_single_leg_pose(env: CreatureNavigationEnv) -> None:
 
 
 def test_moving_toward_target_gets_higher_reward_than_moving_away() -> None:
-    env = CreatureNavigationEnv(
+    env = SwimmerNavigationEnv(
         leg_spec=[1],
         num_obstacles=0,
         arena_size=20.0,

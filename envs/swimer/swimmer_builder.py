@@ -1,4 +1,4 @@
-"""Box2D world and creature construction helpers."""
+"""Box2D world and swimmer construction helpers."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from typing import Iterable
 from Box2D import b2EdgeShape, b2PolygonShape, b2World
 
 
-def build_creature(
+def build_swimmer(
     leg_spec: list[int],
     start_position: tuple[float, float],
     start_angle: float,
@@ -22,7 +22,7 @@ def build_creature(
     body_density: float = 6.0,
     link_density: float = 0.2,
 ) -> dict:
-    """Build a new zero-gravity world with arena, creature, and static obstacles."""
+    """Build a new zero-gravity world with arena, swimmer, and static obstacles."""
     if not leg_spec:
         raise ValueError("leg_spec must contain at least one leg")
     if any(link_count <= 0 for link_count in leg_spec):
@@ -50,7 +50,7 @@ def build_creature(
         angle=start_angle,
         linearDamping=damping,
         angularDamping=damping,
-        userData={"entity": "creature", "part": "central"},
+        userData={"entity": "swimmer", "part": "central"},
     )
     central_body.CreateCircleFixture(
         radius=body_radius,
@@ -63,7 +63,7 @@ def build_creature(
     joints = []
     leg_links = []
     leg_tips = []
-    creature_bodies = [central_body]
+    swimmer_bodies = [central_body]
 
     def _create_leg_link(leg_idx: int, link_idx: int, center: tuple[float, float], angle: float):
         link = world.CreateDynamicBody(
@@ -72,7 +72,7 @@ def build_creature(
             linearDamping=damping,
             angularDamping=damping,
             userData={
-                "entity": "creature",
+                "entity": "swimmer",
                 "part": "link",
                 "leg_index": leg_idx,
                 "link_index": link_idx,
@@ -116,7 +116,7 @@ def build_creature(
         )
         joints.append(first_joint)
         links_this_leg.append(first_link)
-        creature_bodies.append(first_link)
+        swimmer_bodies.append(first_link)
 
         prev_body = first_link
         prev_anchor = first_link.GetWorldPoint((link_length * 0.5, 0.0))
@@ -142,7 +142,7 @@ def build_creature(
             )
             joints.append(joint)
             links_this_leg.append(link)
-            creature_bodies.append(link)
+            swimmer_bodies.append(link)
 
             prev_body = link
             prev_anchor = link.GetWorldPoint((link_length * 0.5, 0.0))
@@ -171,7 +171,7 @@ def build_creature(
         "leg_links": leg_links,
         "leg_tips": leg_tips,
         "obstacles": obstacle_bodies,
-        "creature_bodies": creature_bodies,
+        "swimmer_bodies": swimmer_bodies,
         "wall_body": wall_body,
         "walls": walls,
         "link_length": link_length,
