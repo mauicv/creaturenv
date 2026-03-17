@@ -141,6 +141,7 @@ class ChainReacherEnv(gym.Env):
 
         self.elapsed_steps = 0
         self.prev_distance = 0.0
+        self.prev_action = np.zeros((self.n_links,), dtype=np.float32)
         self._tip_position = (0.0, 0.0)
         self._tip_angle = 0.0
 
@@ -268,6 +269,7 @@ class ChainReacherEnv(gym.Env):
         self.elapsed_steps = 0
         obs = self._get_obs()
         self.prev_distance = float(obs[2 * self.n_links + 4])
+        self.prev_action.fill(0.0)
         self._contact_listener.begin_step()
         return obs, self._get_info(distance_to_target=self.prev_distance)
 
@@ -289,8 +291,17 @@ class ChainReacherEnv(gym.Env):
 
         obs = self._get_obs()
         distance_to_target = float(obs[2 * self.n_links + 4])
-        # Delta-distance reward: positive when moving closer to target.
-        reward = self.prev_distance - distance_to_target
+        # Main progress term.
+        delta_reward = self.prev_distance - distance_to_target
+        # Smooth absolute-distance term gated to be active near the target.
+        near_scale = max(self.target_threshold * 2.0, 1e-6)
+        near_gate = float(np.exp(-((distance_to_target / near_scale) ** 2)))
+        near_target_reward = near_gate * (1.0 / (1.0 + distance_to_target))
+        # Smoothness reward: favors smaller action changes between steps.
+        action_delta = (action - self.prev_action) * 0.5
+        smoothness_reward = 1.0 - float(np.mean(action_delta**2))
+
+        reward = delta_reward + 0.2 * near_target_reward + 0.02 * smoothness_reward
 
         terminated = False
         if self._is_out_of_arena():
@@ -298,6 +309,7 @@ class ChainReacherEnv(gym.Env):
 
         truncated = self.elapsed_steps >= self.max_episode_steps
         self.prev_distance = distance_to_target
+        self.prev_action = action.copy()
         info = self._get_info(distance_to_target=distance_to_target)
         return obs, float(reward), terminated, truncated, info
 
