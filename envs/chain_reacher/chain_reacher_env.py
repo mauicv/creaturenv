@@ -289,8 +289,8 @@ class ChainReacherEnv(gym.Env):
 
         obs = self._get_obs()
         distance_to_target = float(obs[2 * self.n_links + 4])
-        # Smooth proximity reward only: larger as tip gets closer to target.
-        reward = 1.0 / (1.0 + distance_to_target)
+        # Delta-distance reward: positive when moving closer to target.
+        reward = self.prev_distance - distance_to_target
 
         terminated = False
         if self._is_out_of_arena():

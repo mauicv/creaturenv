@@ -156,12 +156,15 @@ def build_chain_reacher_world(
             angularDamping=0.15,
             userData={"entity": "chain", "part": "link", "link_index": link_idx},
         )
-        link.CreatePolygonFixture(
+        link_fixture = link.CreatePolygonFixture(
             shape=b2PolygonShape(box=(0.5 * link_length, 0.5 * link_width)),
             density=1.0,
             friction=0.6,
             restitution=0.0,
         )
+        # Disable all chain-vs-chain collisions so links can pass through each other.
+        # This preserves collisions against obstacles/arena while removing self-blocking.
+        link_fixture.filterData.groupIndex = -1
 
         joint = world.CreateRevoluteJoint(
             bodyA=prev_body,
