@@ -1,95 +1,53 @@
-## Parameterized Multi-Legged Thruster Creature (Gymnasium + Box2D)
+## Creaturenv (Gymnasium + Box2D)
 
-2D zero-gravity swimmer navigation environment with:
-- configurable leg topology (for example `[2, 1, 3]`)
-- per-leg tip thrusters
-- joint motor control
-- lidar obstacle sensing
-- target navigation objective
+This repository contains two configurable 2D RL environments:
 
-The purpose of this RL environment is to explore how world model training changes with increasing complexity of environment. In particular, the various parameters that you can set, such as the leg topology or the number of obsticals allows you to vary different aspects of the complexity in a smoother manner than switching from pendulum to bipedal walker.
+- `SwimmerNavigation-v0`: articulated multi-leg swimmer with tip thrusters, lidar, and obstacle navigation.
+- `ChainReacher-v0`: anchored articulated chain that reaches a target with optional obstacles and lidar sensing.
 
-## AI-Generated Code Notice
+The goal is to support progressively harder environment configurations by varying parameters (for example leg/link count and obstacle density) instead of only switching across unrelated benchmark tasks.
 
-This project was initially generated with AI assistance and then iterated in-editor.
-Please review behavior, safety constraints, and physics assumptions before using it for research or production work.
+NOTE:
 
-## Project Structure
+This project was initially generated with AI assistance and then iterated in-editor. Please review behavior, safety constraints, and physics assumptions before using it for research or production work.
 
-- `envs/swimer/__init__.py` - env registration (`SwimmerNavigation-v0`)
-- `envs/swimer/swimmer_env.py` - main Gymnasium env
-- `envs/swimer/swimmer_builder.py` - Box2D world and swimmer construction
-- `envs/swimer/lidar.py` - lidar raycast callback/helpers
-- `envs/swimer/renderer.py` - pygame renderer (`human` and `rgb_array`)
-- `tests/test_env.py` - sanity test + visual run
-- `examples/train_ppo.py` - Stable-Baselines3 PPO training entrypoint
-- `examples/play_ppo.py` - run a trained PPO policy with rendering
-- `requirements/base.txt` - Python dependencies
-- `requirements/rl.txt` - RL training dependencies (SB3 + extras)
+| 2 links | 3 links | 4 links | 5 links |
+| --- | --- | --- | --- |
+| ![2 links](assets/2-links.gif) | ![3 links](assets/3-links.gif) | ![4 links](assets/4-links.gif) | ![5 links](assets/5-links.gif) |
+
+| 6 links | 7 links | 8 links | 9 links |
+| --- | --- | --- | --- |
+| ![6 links](assets/6-links.gif) | ![7 links](assets/7-links.gif) | ![8 links](assets/8-links.gif) | ![9 links](assets/9-links.gif) |
 
 ## Setup
-
-### 1) Create and activate a virtual environment
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-```
-
-### 2) Install dependencies
-
-```bash
 pip install --upgrade pip
 pip install -r requirements/base.txt
 ```
 
-Notes:
-- Current requirements use `Box2D>=2.3.10` (wheel-friendly on most setups).
-- If you switch back to `box2d-py`, you may need system `swig`.
-
-## Run the visual sanity check
-
-From repo root:
-
-```bash
-python -m tests.test_env
-```
-
-If `python` is not available in your shell:
-
-```bash
-python3 -m tests.test_env
-```
-
-This opens a pygame window, runs random actions, renders each step, and prints `Sanity check passed.` when complete.
-
-## Train with PPO (Stable-Baselines3)
-
-Install RL dependencies:
+Optional RL extras:
 
 ```bash
 pip install -r requirements/rl.txt
 ```
 
-Train:
-
-```bash
-python -m examples.train_ppo --total-timesteps 500000 --run-name ppo_swimmer
-```
-
-Play a trained policy:
-
-```bash
-python -m examples.play_ppo --model-path runs/ppo_swimmer/checkpoints/best_model.zip --deterministic
-```
-
 ## Quick Usage Example
+
+### Swimmer
 
 ```python
 import gymnasium as gym
 import envs.swimer  # registers SwimmerNavigation-v0
 
-env = gym.make("SwimmerNavigation-v0", leg_spec=[2, 1, 3], render_mode="human")
+env = gym.make(
+    "SwimmerNavigation-v0",
+    leg_spec=[2, 1, 3],
+    num_obstacles=4,
+    render_mode="human",
+)
 obs, info = env.reset(seed=0)
 
 for _ in range(200):
@@ -102,21 +60,27 @@ for _ in range(200):
 env.close()
 ```
 
-# PPO training script:
+### Reacher
 
-```sh
-python -m examples.train_ppo \
-  --run-name train_fast_laptop \
-  --total-timesteps 30000 \
-  --n-envs 2 \
-  --max-episode-steps 300 \
-  --leg-spec 1 \
-  --num-obstacles 0 \
-  --n-lidar-rays 4 \
-  --lidar-range 6.0 \
-  --fluid-friction 0.8 \
-  --max-thrust 6.0 \
-  --max-joint-torque 20.0 \
-  --n-steps 256 \
-  --batch-size 64
+```python
+import gymnasium as gym
+import envs.chain_reacher  # registers ChainReacher-v0
+
+env = gym.make(
+    "ChainReacher-v0",
+    n_links=4,
+    n_obs=3,
+    obstacle_seed=7,
+    render_mode="human",
+)
+obs, info = env.reset(seed=0)
+
+for _ in range(300):
+    action = env.action_space.sample()
+    obs, reward, terminated, truncated, info = env.step(action)
+    env.render()
+    if terminated or truncated:
+        obs, info = env.reset()
+
+env.close()
 ```
