@@ -7,10 +7,6 @@ This repository contains two configurable 2D RL environments:
 
 The goal is to support progressively harder environment configurations by varying parameters (for example leg/link count and obstacle density) instead of only switching across unrelated benchmark tasks.
 
-NOTE:
-
-This project was initially generated with AI assistance and then iterated in-editor. Please review behavior, safety constraints, and physics assumptions before using it for research or production work.
-
 | 2 links | 3 links | 4 links | 5 links |
 | --- | --- | --- | --- |
 | ![2 links](assets/2-links.gif) | ![3 links](assets/3-links.gif) | ![4 links](assets/4-links.gif) | ![5 links](assets/5-links.gif) |
@@ -18,6 +14,10 @@ This project was initially generated with AI assistance and then iterated in-edi
 | 6 links | 7 links | 8 links | 9 links |
 | --- | --- | --- | --- |
 | ![6 links](assets/6-links.gif) | ![7 links](assets/7-links.gif) | ![8 links](assets/8-links.gif) | ![9 links](assets/9-links.gif) |
+
+## NOTE:
+
+This project was initially generated with AI assistance and then iterated in-editor. Please review behavior, safety constraints, and physics assumptions before using it for research or production work.
 
 ## Setup
 
