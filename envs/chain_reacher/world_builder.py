@@ -123,7 +123,8 @@ def build_chain_reacher_world(
         position=(0.0, 0.0),
         userData={"entity": "anchor"},
     )
-    anchor.CreateCircleFixture(radius=0.06, density=0.0, friction=0.0, restitution=0.0)
+    body_fixture = anchor.CreateCircleFixture(radius=0.06, density=0.0, friction=0.0, restitution=0.0)
+    body_fixture.filterData.groupIndex = -1
 
     arena_body = world.CreateStaticBody(userData={"entity": "arena"})
     arena_segments = []
