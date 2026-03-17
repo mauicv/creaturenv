@@ -141,7 +141,6 @@ class ChainReacherEnv(gym.Env):
 
         self.elapsed_steps = 0
         self.prev_distance = 0.0
-        self._was_in_target = False
         self._tip_position = (0.0, 0.0)
         self._tip_angle = 0.0
 
@@ -269,7 +268,6 @@ class ChainReacherEnv(gym.Env):
         self.elapsed_steps = 0
         obs = self._get_obs()
         self.prev_distance = float(obs[2 * self.n_links + 4])
-        self._was_in_target = self.prev_distance <= self.target_threshold
         self._contact_listener.begin_step()
         return obs, self._get_info(distance_to_target=self.prev_distance)
 
@@ -300,9 +298,8 @@ class ChainReacherEnv(gym.Env):
             reward += -0.1
 
         in_target = distance_to_target <= self.target_threshold
-        if in_target and not self._was_in_target:
+        if in_target:
             reward += 3.0
-        self._was_in_target = in_target
 
         terminated = False
         if self._is_out_of_arena():
