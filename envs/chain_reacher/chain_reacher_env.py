@@ -124,8 +124,8 @@ class ChainReacherEnv(gym.Env):
         self.max_joint_speed = 6.0
 
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(self.n_links,), dtype=np.float32)
-        # Observation: joint angles, joint speeds, distance-to-target, and lidar.
-        obs_dim = 2 * self.n_links + 1 + self.n_lidar_rays
+        # Observation: joint angles, joint speeds, target position, distance-to-target, and lidar.
+        obs_dim = 2 * self.n_links + 3 + self.n_lidar_rays
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_dim,), dtype=np.float32)
 
         self.world = None
@@ -241,7 +241,15 @@ class ChainReacherEnv(gym.Env):
         ).astype(np.float32)
 
         distance = float(np.linalg.norm(delta))
-        obs = np.concatenate([joint_angles, joint_speeds, np.asarray([distance], dtype=np.float32), self._last_lidar]).astype(np.float32)
+        obs = np.concatenate(
+            [
+                joint_angles,
+                joint_speeds,
+                self.target_position.astype(np.float32),
+                np.asarray([distance], dtype=np.float32),
+                self._last_lidar,
+            ]
+        ).astype(np.float32)
         return obs
 
     def _get_info(self, distance_to_target: float) -> dict[str, Any]:
@@ -260,7 +268,7 @@ class ChainReacherEnv(gym.Env):
 
         self.elapsed_steps = 0
         obs = self._get_obs()
-        self.prev_distance = float(obs[2 * self.n_links])
+        self.prev_distance = float(obs[2 * self.n_links + 2])
         self.prev_action.fill(0.0)
         self._contact_listener.begin_step()
         return obs, self._get_info(distance_to_target=self.prev_distance)
@@ -282,7 +290,7 @@ class ChainReacherEnv(gym.Env):
         self.elapsed_steps += 1
 
         obs = self._get_obs()
-        distance_to_target = float(obs[2 * self.n_links])
+        distance_to_target = float(obs[2 * self.n_links + 2])
         # Main progress term.
         delta_reward = self.prev_distance - distance_to_target
         # Smooth absolute-distance term gated to be active near the target.
@@ -320,6 +328,45 @@ class ChainReacherEnv(gym.Env):
             tip_position=self._tip_position,
             tip_angle=self._tip_angle,
         )
+
+    def render_from_state(self, observation: np.ndarray):
+        """Reconstruct link poses and target position from observation and render."""
+        obs = np.asarray(observation, dtype=np.float32).reshape(-1)
+        min_dim = 2 * self.n_links + 2
+        if obs.shape[0] < min_dim:
+            raise ValueError(f"observation too short: need at least {min_dim}, got {obs.shape[0]}")
+
+        # Ensure a world exists to draw into.
+        if self.world is None:
+            raise RuntimeError("Environment not initialized. Call reset() first.")
+
+        angle_slice = obs[: self.n_links]
+        target_xy = obs[2 * self.n_links : 2 * self.n_links + 2]
+
+        # Reconstruct link transforms from joint relative angles only.
+        anchor_x, anchor_y = 0.0, 0.0
+        cumulative_angle = 0.0
+        for idx, link in enumerate(self.links):
+            cumulative_angle += float(angle_slice[idx])
+
+            ux = math.cos(cumulative_angle)
+            uy = math.sin(cumulative_angle)
+            center_x = anchor_x + 0.5 * self.link_length * ux
+            center_y = anchor_y + 0.5 * self.link_length * uy
+
+            link.position = (center_x, center_y)
+            link.angle = cumulative_angle
+            link.linearVelocity = (0.0, 0.0)
+            link.angularVelocity = 0.0
+
+            anchor_x += self.link_length * ux
+            anchor_y += self.link_length * uy
+
+        tip_position, tip_angle = self._tip_state()
+        self._tip_position = (float(tip_position[0]), float(tip_position[1]))
+        self._tip_angle = float(tip_angle)
+        self.target_position = np.asarray((float(target_xy[0]), float(target_xy[1])), dtype=np.float32)
+        return self.render()
 
     def close(self) -> None:
         if self._renderer is not None:
