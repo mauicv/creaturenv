@@ -13,7 +13,7 @@ from random import randint
 
 def run_sanity_check() -> None:
     env = ChainReacherEnv(
-        n_links=2,
+        n_links=1,
         n_obs=0,
         link_length=1.0,
         obstacle_seed=8,

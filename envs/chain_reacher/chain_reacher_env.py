@@ -151,7 +151,10 @@ class ChainReacherEnv(gym.Env):
         max_r = self.n_links * self.link_length * 0.9
         for _ in range(600):
             angle = float(self.np_random.uniform(-math.pi, math.pi))
-            radius = float(self.np_random.uniform(min_r, max_r))
+            if self.n_links == 1:
+                radius = max_r
+            else:
+                radius = float(self.np_random.uniform(min_r, max_r))
             x = radius * math.cos(angle)
             y = radius * math.sin(angle)
             if math.hypot(x, y) > (self.arena_radius - 0.2):
