@@ -124,7 +124,8 @@ class ChainReacherEnv(gym.Env):
         self.max_joint_speed = 6.0
 
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(self.n_links,), dtype=np.float32)
-        obs_dim = 2 * self.n_links + 5 + self.n_lidar_rays
+        # Observation: joint angles, joint speeds, distance-to-target, and lidar.
+        obs_dim = 2 * self.n_links + 1 + self.n_lidar_rays
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_dim,), dtype=np.float32)
 
         self.world = None
@@ -224,7 +225,6 @@ class ChainReacherEnv(gym.Env):
         self._tip_position = (float(tip_position[0]), float(tip_position[1]))
         self._tip_angle = tip_angle
         delta = self.target_position - tip_position
-        distance = float(np.linalg.norm(delta))
 
         joint_angles = np.zeros((self.n_links,), dtype=np.float32)
         joint_speeds = np.zeros((self.n_links,), dtype=np.float32)
@@ -240,16 +240,8 @@ class ChainReacherEnv(gym.Env):
             max_range=self.lidar_range,
         ).astype(np.float32)
 
-        obs = np.concatenate(
-            [
-                joint_angles,
-                joint_speeds,
-                tip_position,
-                delta.astype(np.float32),
-                np.asarray([distance], dtype=np.float32),
-                self._last_lidar,
-            ]
-        ).astype(np.float32)
+        distance = float(np.linalg.norm(delta))
+        obs = np.concatenate([joint_angles, joint_speeds, np.asarray([distance], dtype=np.float32), self._last_lidar]).astype(np.float32)
         return obs
 
     def _get_info(self, distance_to_target: float) -> dict[str, Any]:
@@ -268,7 +260,7 @@ class ChainReacherEnv(gym.Env):
 
         self.elapsed_steps = 0
         obs = self._get_obs()
-        self.prev_distance = float(obs[2 * self.n_links + 4])
+        self.prev_distance = float(obs[2 * self.n_links])
         self.prev_action.fill(0.0)
         self._contact_listener.begin_step()
         return obs, self._get_info(distance_to_target=self.prev_distance)
@@ -290,7 +282,7 @@ class ChainReacherEnv(gym.Env):
         self.elapsed_steps += 1
 
         obs = self._get_obs()
-        distance_to_target = float(obs[2 * self.n_links + 4])
+        distance_to_target = float(obs[2 * self.n_links])
         # Main progress term.
         delta_reward = self.prev_distance - distance_to_target
         # Smooth absolute-distance term gated to be active near the target.
