@@ -80,6 +80,7 @@ class ChainReacherEnv(gym.Env):
         n_lidar_rays: int = 16,
         lidar_range: float | None = None,
         target_threshold: float = 0.3,
+        upright_target: bool = False,
         max_episode_steps: int = 500,
         render_mode: str | None = None,
     ) -> None:
@@ -115,6 +116,7 @@ class ChainReacherEnv(gym.Env):
         self.n_lidar_rays = int(n_lidar_rays)
         self.lidar_range = float(lidar_range) if lidar_range is not None else self.n_links * self.link_length
         self.target_threshold = float(target_threshold)
+        self.upright_target = bool(upright_target)
         self.max_episode_steps = int(max_episode_steps)
         self.render_mode = render_mode
 
@@ -150,11 +152,18 @@ class ChainReacherEnv(gym.Env):
         min_r = self.link_length
         max_r = self.n_links * self.link_length * 0.9
         for _ in range(600):
-            angle = float(self.np_random.uniform(-math.pi, math.pi))
-            if self.n_links == 1:
-                radius = max_r
+            if self.upright_target:
+                angle = math.pi * 0.5
+                if self.n_links == 1:
+                    radius = max_r
+                else:
+                    radius = float(self.np_random.uniform(min_r, max_r))
             else:
-                radius = float(self.np_random.uniform(min_r, max_r))
+                angle = float(self.np_random.uniform(-math.pi, math.pi))
+                if self.n_links == 1:
+                    radius = max_r
+                else:
+                    radius = float(self.np_random.uniform(min_r, max_r))
             x = radius * math.cos(angle)
             y = radius * math.sin(angle)
             if math.hypot(x, y) > (self.arena_radius - 0.2):
@@ -167,6 +176,8 @@ class ChainReacherEnv(gym.Env):
             if blocked:
                 continue
             return np.asarray((x, y), dtype=np.float32)
+        if self.upright_target:
+            return np.asarray((0.0, max_r), dtype=np.float32)
         return np.asarray((max_r, 0.0), dtype=np.float32)
 
     def _tip_state(self) -> tuple[np.ndarray, float]:

@@ -22,6 +22,7 @@ def run_sanity_check() -> None:
         lidar_range=4.0,
         max_episode_steps=500,
         render_mode="human",
+        upright_target=True,
     )
     obs, info = env.reset(seed=randint(0, 1000000))
     env.render()
